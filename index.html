@@ -118,8 +118,14 @@
       }
 
       // แสดง context สำหรับ debug
-      var context = liff.getContext();
-      var profile = await liff.getProfile();
+     var context = liff.getContext();
+var groupId = context.groupId;
+
+// ถ้า groupId เป็น null ให้ดึงจาก URL แทน
+if (!groupId) {
+  var urlParams = new URLSearchParams(window.location.search);
+  groupId = urlParams.get("groupId");
+}
       document.getElementById("debug").textContent = 
         "groupId: " + (context.groupId || "null") + 
         " | " + profile.displayName;
