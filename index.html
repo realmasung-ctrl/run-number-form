@@ -102,7 +102,7 @@
 
   <script>
     const LIFF_ID = "2010376647-lNIZCwv9";
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwDl8gj0LlBw4CnhohatSu64yizOkC9hDnf9Z_N59guf3XUwmm5IUK89jkgH37OpJpiPg/exec";
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwDl8gj0LlBw4CnhohatSu64yizOkC9hDnf9Z_N59guf3XUwmm5IUK89jkgH37OpJpiPg/exec";
 
     liff.init({ liffId: LIFF_ID }).then(() => {
       if (!liff.isLoggedIn()) liff.login();
@@ -124,32 +124,37 @@ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwDl8gj0LlBw4Cnhohat
       btn.disabled = true;
       document.getElementById("status").textContent = "⏳ กำลังรันเลข...";
 
-      var profile = await liff.getProfile();
-      var userId = profile.userId;
-      var displayName = profile.displayName;
-      var context = liff.getContext();
-      var groupId = context.groupId;
-
-      var payload = {
-        type: type,
-        jobNo: jobNo,
-        dateFinish: dateFinish,
-        customer: customer,
-        count: parseInt(count),
-        userId: userId,
-        displayName: displayName,
-        groupId: groupId
-      };
-
       try {
+        var profile = await liff.getProfile();
+        var userId = profile.userId;
+        var displayName = profile.displayName;
+        var context = liff.getContext();
+        var groupId = context.groupId;
+
+        var payload = {
+          type: "liff",
+          type_val: type,
+          jobNo: jobNo,
+          dateFinish: dateFinish,
+          customer: customer,
+          count: parseInt(count),
+          userId: userId,
+          displayName: displayName,
+          groupId: groupId
+        };
+
         await fetch(WEBAPP_URL, {
           method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
+
         document.getElementById("status").textContent = "✅ รันเลขเรียบร้อยแล้วครับ";
         setTimeout(() => liff.closeWindow(), 1500);
+
       } catch (err) {
-        document.getElementById("status").textContent = "⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่ครับ";
+        document.getElementById("status").textContent = "⚠️ เกิดข้อผิดพลาด: " + err.message;
         btn.disabled = false;
       }
     }
