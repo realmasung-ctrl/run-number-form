@@ -27,8 +27,14 @@
     h2 {
       color: #06C755;
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 8px;
       font-size: 22px;
+    }
+    .debug {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 16px;
     }
     label {
       display: block;
@@ -77,6 +83,7 @@
 <body>
   <div class="card">
     <h2>🔢 รันเลข</h2>
+    <div class="debug" id="debug">กำลังโหลด...</div>
 
     <label>ประเภท</label>
     <select id="type">
@@ -104,8 +111,21 @@
     const LIFF_ID = "2010376647-lNIZCwv9";
     const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwDl8gj0LlBw4CnhohatSu64yizOkC9hDnf9Z_N59guf3XUwmm5IUK89jkgH37OpJpiPg/exec";
 
-    liff.init({ liffId: LIFF_ID }).then(() => {
-      if (!liff.isLoggedIn()) liff.login();
+    liff.init({ liffId: LIFF_ID }).then(async () => {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      // แสดง context สำหรับ debug
+      var context = liff.getContext();
+      var profile = await liff.getProfile();
+      document.getElementById("debug").textContent = 
+        "groupId: " + (context.groupId || "null") + 
+        " | " + profile.displayName;
+
+    }).catch(err => {
+      document.getElementById("debug").textContent = "LIFF Error: " + err.message;
     });
 
     async function submitForm() {
@@ -126,10 +146,14 @@
 
       try {
         var profile = await liff.getProfile();
-        var userId = profile.userId;
-        var displayName = profile.displayName;
         var context = liff.getContext();
         var groupId = context.groupId;
+
+        if (!groupId) {
+          document.getElementById("status").textContent = "⚠️ กรุณาเปิดฟอร์มจากในกลุ่ม LINE เท่านั้นครับ";
+          btn.disabled = false;
+          return;
+        }
 
         var payload = {
           type: "liff",
@@ -138,8 +162,8 @@
           dateFinish: dateFinish,
           customer: customer,
           count: parseInt(count),
-          userId: userId,
-          displayName: displayName,
+          userId: profile.userId,
+          displayName: profile.displayName,
           groupId: groupId
         };
 
@@ -154,7 +178,7 @@
         setTimeout(() => liff.closeWindow(), 1500);
 
       } catch (err) {
-        document.getElementById("status").textContent = "⚠️ เกิดข้อผิดพลาด: " + err.message;
+        document.getElementById("status").textContent = "⚠️ Error: " + err.message;
         btn.disabled = false;
       }
     }
