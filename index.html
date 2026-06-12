@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รันเลข</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #06C755;
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 22px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #06C755;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #06C755;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    .status {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🔢 รันเลข</h2>
+
+    <label>ประเภท</label>
+    <select id="type">
+      <option value="S">S</option>
+      <option value="N">N</option>
+    </select>
+
+    <label>เลขที่งาน</label>
+    <input type="text" id="jobNo" placeholder="เช่น 69/2625">
+
+    <label>วันที่เสร็จ</label>
+    <input type="text" id="dateFinish" placeholder="เช่น 12/6/26">
+
+    <label>ชื่อลูกค้า</label>
+    <input type="text" id="customer" placeholder="เช่น TSC">
+
+    <label>จำนวนเครื่อง</label>
+    <input type="number" id="count" placeholder="เช่น 3" min="1">
+
+    <button id="submitBtn" onclick="submitForm()">✅ รันเลข</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const LIFF_ID = "ใส่_LIFF_ID_ของคุณที่นี่";
+    const WEBAPP_URL = "ใส่_WEBAPP_URL_ของคุณที่นี่";
+
+    liff.init({ liffId: LIFF_ID }).then(() => {
+      if (!liff.isLoggedIn()) liff.login();
+    });
+
+    async function submitForm() {
+      var type = document.getElementById("type").value;
+      var jobNo = document.getElementById("jobNo").value.trim();
+      var dateFinish = document.getElementById("dateFinish").value.trim();
+      var customer = document.getElementById("customer").value.trim();
+      var count = document.getElementById("count").value.trim();
+
+      if (!jobNo || !dateFinish || !customer || !count) {
+        document.getElementById("status").textContent = "⚠️ กรุณากรอกข้อมูลให้ครบครับ";
+        return;
+      }
+
+      var btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      document.getElementById("status").textContent = "⏳ กำลังรันเลข...";
+
+      var profile = await liff.getProfile();
+      var userId = profile.userId;
+      var displayName = profile.displayName;
+      var context = liff.getContext();
+      var groupId = context.groupId;
+
+      var payload = {
+        type: type,
+        jobNo: jobNo,
+        dateFinish: dateFinish,
+        customer: customer,
+        count: parseInt(count),
+        userId: userId,
+        displayName: displayName,
+        groupId: groupId
+      };
+
+      try {
+        await fetch(WEBAPP_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        document.getElementById("status").textContent = "✅ รันเลขเรียบร้อยแล้วครับ";
+        setTimeout(() => liff.closeWindow(), 1500);
+      } catch (err) {
+        document.getElementById("status").textContent = "⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่ครับ";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
